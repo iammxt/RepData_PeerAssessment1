@@ -8,13 +8,67 @@ output:
 
 ## Loading and preprocessing the data
 
+### Load data
+```{r echo=TRUE}
+unzip('activity.zip')
+suppressMessages(library(data.table))
+dat <- fread('activity.csv', header=TRUE)
+```
+
+### Transform data
+```{r echo=TRUE}
+suppressMessages(library(dplyr))
+dat <- mutate(dat, date=as.POSIXct(date))
+```
+
 
 
 ## What is mean total number of steps taken per day?
+### Total number of steps taken per day
+```{r echo=TRUE}
+dat1 <- dat[!is.na(dat$steps),]
+steps_per_day <- aggregate(select(dat1, steps),
+                            by=list(date=dat1$date), FUN=sum)
+hist(steps_per_day$steps, breaks=20,
+        main='Histogram of number of Steps per Day',
+        xlab='Number of steps taken per day',
+        ylab='Frequency')
+```
 
+### Mean of the total number of steps taken perday
+```{r echo=TRUE}
+as.integer(mean(steps_per_day$steps))
+```
+
+### Median of the total number of steps taken perday
+```{r echo=TRUE}
+as.integer(median(steps_per_day$steps))
+```
 
 
 ## What is the average daily activity pattern?
+
+### Average number of steps taken every interval, averaged across all days
+```{r echo=TRUE}
+avgsteps_per_interval <- aggregate(select(dat1, steps),
+                                    by=list(interval=dat1$interval), FUN=mean)
+plot(avgsteps_per_interval$steps ~ avgsteps_per_interval$interval, type='l',
+        main='Average Number of Steps Taken During the Day',
+        ylab='Steps', xlab='Time of Day', xaxt='n')
+axis(1, at=(0:6*4)*100, labels=paste(0:6*4, ':00', sep=''))
+```
+
+### Which 5-min interval on average across all the days contains the maximum number of steps?
+```{r echo=TRUE}
+max_interval <- avgsteps_per_interval$interval[
+                    which.max(avgsteps_per_interval$steps)]
+max_interval 
+```
+
+### At what time?
+```{r echo=TRUE}
+sprintf('%02d:%02d', floor(max_interval/100), max_interval%%100*0.6)
+```
 
 
 
