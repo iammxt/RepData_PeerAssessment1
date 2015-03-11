@@ -40,20 +40,20 @@ hist(steps_per_day$steps, breaks=20,
 
 ![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
 
-### Mean of the total number of steps taken perday
+### Mean of the total number of steps taken per day
 
 ```r
-as.integer(mean(steps_per_day$steps))
+mean(steps_per_day$steps)
 ```
 
 ```
-## [1] 10766
+## [1] 10766.19
 ```
 
-### Median of the total number of steps taken perday
+### Median of the total number of steps taken per day
 
 ```r
-as.integer(median(steps_per_day$steps))
+median(steps_per_day$steps)
 ```
 
 ```
@@ -101,7 +101,116 @@ sprintf('%02d:%02d', floor(max_interval/100), max_interval%%100*0.6)
 
 
 ## Imputing missing values
+### Calculate and report the total number of missing values in the dataset
+
+```r
+sum(is.na(dat))
+```
+
+```
+## [1] 2304
+```
+
+### Fill in all of the missing values in the dataset using the mean for that 5-min interval to make the daily pattern of this people consistent over multiple days
+
+```r
+filled_dat <- mutate(dat, steps=ifelse(is.na(steps),
+    avgsteps_per_interval$steps, # this is being recycling to have the 
+                                 # same length with filled_dat
+    steps))
+```
+
+### Make a histogram of the total number of steps taken each day
+
+```r
+new_steps_per_day <- aggregate(select(filled_dat, steps),
+                                        by=list(date=filled_dat$date),
+                                        FUN=sum)
+hist(new_steps_per_day$steps, breaks=20,
+        main='Histogram of Steps Per Day After Imputing Data',
+        xlab='Number of Steps Taken Per Day')
+```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
+
+### Mean total number of steps taken per day
+- The new mean
+
+```r
+mean(new_steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+- The difference compared to the mean before filling in missing data
+
+```r
+mean(new_steps_per_day$steps) - mean(steps_per_day$steps)
+```
+
+```
+## [1] 0
+```
+
+### Median total number of steps taken per day
+- The new median
+
+```r
+median(new_steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+- The difference compared to the median before filling in missing data 
+
+```r
+median(new_steps_per_day$steps) - median(steps_per_day$steps)
+```
+
+```
+## [1] 1.188679
+```
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+### Classify the activities into weekdays and weekends
+
+```r
+daytype_dat <- mutate(filled_dat, daytype=ifelse(
+                                weekdays(date) %in% c('Saturday', 'Sunday'),
+                                'weekends', 'weekdays'))
+```
+
+### Calculate the average steps of every 5-min interval across all days, for weekdays and weekends separately
+
+```r
+daytype_interval_avg <- aggregate(select(daytype_dat, steps),
+                                    by=list(interval=daytype_dat$interval,
+                                            daytype=daytype_dat$daytype),
+                                    FUN=mean)
+weekdays_interval_avg <- filter(daytype_interval_avg, daytype=='weekdays') 
+weekends_interval_avg <- filter(daytype_interval_avg, daytype=='weekends') 
+```
+
+### The difference in the activity patterns between weekdays and weekends
+
+```r
+suppressMessages(library(ggplot2))
+suppressMessages(require(grid))
+g <- ggplot(daytype_interval_avg, aes(x=interval, y=steps, colour=daytype)) +
+        geom_line(size=0.25, line=1) +
+        scale_color_manual(values=c('red', 'blue')) +
+        scale_x_continuous(breaks=0:6*400, labels=paste(0:6*4, ':00', sep='')) +
+        labs(x='Time of day', y='Average number of steps in 5-min interval') +
+        labs(title='Activity Patterns of Weekdays vs. Weekends') +
+        theme(aspect.ratio=9/16) +
+        theme(plot.margin=unit(c(0, 0, 0, 0), "cm"))
+print(g)
+```
+
+![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png) 
