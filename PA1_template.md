@@ -203,13 +203,11 @@ weekends_interval_avg <- filter(daytype_interval_avg, daytype=='weekends')
 suppressMessages(library(ggplot2))
 suppressMessages(require(grid))
 g <- ggplot(daytype_interval_avg, aes(x=interval, y=steps, colour=daytype)) +
-        geom_line(size=0.25, line=1) +
+        geom_line(size=0.5, line=1) +
         scale_color_manual(values=c('red', 'blue')) +
         scale_x_continuous(breaks=0:6*400, labels=paste(0:6*4, ':00', sep='')) +
         labs(x='Time of day', y='Average number of steps in 5-min interval') +
-        labs(title='Activity Patterns of Weekdays vs. Weekends') +
-        theme(aspect.ratio=9/16) +
-        theme(plot.margin=unit(c(0, 0, 0, 0), "cm"))
+        labs(title='Activity Patterns of Weekdays vs. Weekends')
 print(g)
 ```
 
